@@ -1,6 +1,5 @@
 from flask import Flask, jsonify
 from predict import predictions
-import uvicorn
 
 app = Flask(__name__)
 
@@ -22,4 +21,4 @@ def predict(symptoms):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
+    app.run(host="0.0.0.0", port=8000)

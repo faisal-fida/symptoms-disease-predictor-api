@@ -1,62 +1,51 @@
-# Symptoms to Diseases Prediction API
+# symptoms-disease-predictor-api
 
-## Overview
+Small Flask API that takes a free-text list of symptoms and returns a predicted disease from a pre-trained TensorFlow text classifier.
 
-This project is a Flask-based API designed to predict diseases based on given symptoms using a pre-trained TensorFlow model. It demonstrates the integration of machine learning with web development to provide real-time predictions.
+## Features
 
-## Complexities
+- `GET /` health message.
+- `GET /predict/<symptoms>` returns the most likely disease and the scores of all other classes.
+- 24 disease classes (listed in `model/classes.json`), for example Acne, Allergy, Dengue, Diabetes.
+- Model is loaded once at startup.
 
-### Model Integration
-- **Challenge:** Integrating a TensorFlow model within a Flask API to provide real-time predictions.
-- **Solution:** Loaded the pre-trained model using TensorFlow and created prediction endpoints to handle incoming requests and return predictions.
+## Tech stack
 
-### Data Handling
-- **Challenge:** Processing and converting user input into a format suitable for the model.
-- **Solution:** Utilized TensorFlow's data processing utilities to convert input text into tensors that the model can understand, ensuring accurate predictions.
+Python, Flask, TensorFlow / Keras (SavedModel with a text vectorizer vocabulary).
 
-## Challenges and Solutions
+## Project structure
 
-### Challenge 1: Model Loading
-- **Problem:** Efficiently loading a large TensorFlow model on server startup.
-- **Solution:** Pre-loaded the model during the Flask app initialization to avoid loading delays during individual requests.
+```
+app.py               Flask routes
+predict.py           loads the model and runs inference
+model/tf_model/      saved Keras model (about 70 MB)
+model/classes.json   class index to disease name
+requirements.txt
+```
 
-### Challenge 2: Real-time Inference
-- **Problem:** Ensuring real-time inference without significant delays.
-- **Solution:** Optimized the prediction function to handle inputs and provide predictions quickly, leveraging TensorFlow's efficient computation.
+## Setup and run
 
-## Getting Started
+Requirements: Python 3.8+ and a TensorFlow version compatible with the saved model. No environment variables.
 
-### Prerequisites
-- Python 3.8+
-- Flask
-- TensorFlow
-- Uvicorn
-
-### Installation
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/faisal-fida/codespaces-flask.git
-   cd codespaces-flask
-   ```
-
-2. Install the required Python packages:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. Extract the TensorFlow model:
-   ```bash
-   python main.py
-   ```
-
-4. Run the Flask app:
-   ```bash
-   python app.py
-   ```
+```bash
+pip install -r requirements.txt
+python app.py        # serves on http://localhost:8000
+```
 
 ## Usage
 
-1. Start the Flask app using the command above.
-2. Access the API at `http://localhost:8000/`.
-3. Use the `/predict/<symptoms>` endpoint to get disease predictions based on symptoms.
+```bash
+curl "http://localhost:8000/predict/itching%20skin%20rash"
+```
+
+Response shape:
+
+```json
+{"predicted_disease": "...", "other_diseases": [["Acne", 0.01], ["Allergy", 0.02]]}
+```
+
+## Limitations
+
+- Not medical advice. This is a demo model, trained on data whose source is not documented in this repo, and it has no reported accuracy.
+- The model file was saved with an older TensorFlow/Keras, so a much newer TensorFlow may fail to load it. This was not run during cleanup (TensorFlow was not installed).
+- The Flask development server is used, no authentication, no input validation.

@@ -1,31 +1,29 @@
-import tensorflow as tf
-from tensorflow import keras
 import json
-import uvicorn
+import os
 
-# Load the keras model from model.keras
-model = tf.keras.models.load_model("model/tf_model")
+import tensorflow as tf
 
-# Load classes from the file
-with open("model/classes.json", "r") as f:
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Load the saved Keras model (SavedModel format)
+model = tf.keras.models.load_model(os.path.join(BASE_DIR, "model", "tf_model"))
+
+# Load class names; JSON keys are strings ("0", "1", ...)
+with open(os.path.join(BASE_DIR, "model", "classes.json"), "r") as f:
     classes = json.load(f)
 
 
-def predictions(text: str) -> str:
+def predictions(text: str):
     """
-    Predicts the disease based on the symptoms
+    Predicts the disease based on the symptoms.
     :param text: The symptoms
-    :return: The predicted disease
+    :return: (predicted disease, list of [other disease, score] pairs)
     """
-    feature = {"text": text}
-    input_dict = {
-        name: tf.convert_to_tensor([value]) for name, value in feature.items()
-    }
-    predictions = model.predict(input_dict, verbose=0)[0]
-    predicted_disease = classes[tf.argmax(predictions).numpy()]
+    input_dict = {"text": tf.convert_to_tensor([text])}
+    scores = model.predict(input_dict, verbose=0)[0]
+    best = int(tf.argmax(scores).numpy())
+    predicted_disease = classes[str(best)]
     other_diseases = [
-        (classes[i], predictions[i])
-        for i in range(len(predictions))
-        if i != tf.argmax(predictions).numpy()
+        (classes[str(i)], float(scores[i])) for i in range(len(scores)) if i != best
     ]
     return predicted_disease, other_diseases
